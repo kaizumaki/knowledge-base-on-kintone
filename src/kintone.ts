@@ -19,13 +19,17 @@ import { generateTaskList } from './utils/taskGenerator';
     const sequenceText = record.sequence_input_field.value;
     const spaceElementForSequence =
       kintone.app.record.getSpaceElement('sequence-display');
-    spaceElementForSequence.innerHTML = `<pre class="mermaid">${sequenceText}</pre>`;
+    if (!!sequenceText) {
+      spaceElementForSequence.innerHTML = `<pre class="mermaid">${sequenceText}</pre>`;
+    }
 
     // ガントチャートの表示
     const ganttText = record.gantt_input_field.value;
     const spaceElementForGantt =
       kintone.app.record.getSpaceElement('gantt-display');
-    spaceElementForGantt.innerHTML = `<pre class="mermaid">${ganttText}</pre>`;
+    if (!!ganttText) {
+      spaceElementForGantt.innerHTML = `<pre class="mermaid">${ganttText}</pre>`;
+    }
 
     // 補足事項の表示
     const additionalInformationText =
@@ -33,20 +37,25 @@ import { generateTaskList } from './utils/taskGenerator';
     const spaceElementForAdditionalInformation =
       kintone.app.record.getSpaceElement('additional-information-display');
     spaceElementForAdditionalInformation.classList.add('markdown-body');
-    spaceElementForAdditionalInformation.innerHTML = marked.parse(
-      additionalInformationText
-    );
+    if (!!additionalInformationText) {
+      spaceElementForAdditionalInformation.innerHTML = marked.parse(
+        additionalInformationText
+      );
+    }
+
+    const spaceElementForTaskList =
+      kintone.app.record.getSpaceElement('task-list-display');
+    if (!!sequenceText) {
+      // タスクリストを生成
+      const taskListMarkdown: string = generateTaskList(sequenceText);
+      // タスクリストの表示
+      spaceElementForTaskList.innerHTML = marked.parse(taskListMarkdown);
+    }
 
     mermaid.run({
       querySelector: '.mermaid',
     });
 
-    const spaceElementForTaskList =
-      kintone.app.record.getSpaceElement('task-list-display');
-    // タスクリストを生成
-    const taskListMarkdown: string = generateTaskList(sequenceText);
-    // タスクリストを表示
-    spaceElementForTaskList.innerHTML = marked.parse(taskListMarkdown);
     return event;
   });
 })();
