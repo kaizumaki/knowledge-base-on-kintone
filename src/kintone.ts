@@ -1,6 +1,9 @@
 import { marked } from 'marked';
 import mermaid from 'mermaid';
 import { generateTaskList } from './utils/taskGenerator';
+import { parseSequenceDiagram } from './utils/parseSequenceDiagram';
+import { convertToGanttChart } from './utils/convertToGanttChart';
+import { generateGanttChart } from './utils/generateGanttChart';
 
 (() => {
   'use strict';
@@ -24,11 +27,31 @@ import { generateTaskList } from './utils/taskGenerator';
     }
 
     // ガントチャートの表示
-    const ganttText = record.gantt_input_field.value;
+    // 「Note」から始まる行で、「YYYY-MM-DD」を含む行からラベルと日付を抽出
+    const committeeMatch = sequenceText.match(
+      /Note.*?(.*\s+)(\d{4}-\d{2}-\d{2})/
+    );
+    const committeeLabel = committeeMatch ? committeeMatch[1].trim() : '実施日';
+    const committeeDate =
+      committeeMatch && committeeMatch[2].trim() !== 'YYYY-MM-DD'
+        ? committeeMatch[2].trim()
+        : '2024-07-01';
+
+    // シーケンスダイアグラムのタイトルを抽出
+    const titleMatch = sequenceText.match(/title:\s*(.+)/);
+    const title = titleMatch ? titleMatch[1].trim() : 'Gantt Chart';
+
+    const events = parseSequenceDiagram(sequenceText, committeeLabel);
+    const ganttTasks = convertToGanttChart(
+      events,
+      committeeLabel,
+      committeeDate
+    );
+    const ganttChart = generateGanttChart(ganttTasks, title);
     const spaceElementForGantt =
       kintone.app.record.getSpaceElement('gantt-display');
-    if (!!ganttText) {
-      spaceElementForGantt.innerHTML = `<pre class="mermaid">${ganttText}</pre>`;
+    if (!!ganttChart) {
+      spaceElementForGantt.innerHTML = `<pre class="mermaid">${ganttChart}</pre>`;
     }
 
     // 補足事項の表示
