@@ -52,9 +52,9 @@ export function convertToGanttChart(
     }
   });
 
-  // 「当日」を追加
+  // 文字列を「当日」セクションに使用
   ganttTasks.push({
-    section: '当日',
+    section: committeeLabel,
     task: committeeLabel,
     start: committeeDate,
     duration: '1d',

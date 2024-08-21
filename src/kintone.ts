@@ -27,15 +27,28 @@ import { generateGanttChart } from './utils/generateGanttChart';
     }
 
     // ガントチャートの表示
-    // 「Note」から始まる行で、「YYYY-MM-DD」を含む行からラベルと日付を抽出
+    // 正規表現で「Note ... YYYY-MM-DD」部分を抽出し、その後のテキストも取得する
     const committeeMatch = sequenceText.match(
-      /Note.*?(.*\s+)(\d{4}-\d{2}-\d{2})/
+      /Note left of 委員:\s*([^\n]*\s(?:\d{4}-\d{2}-\d{2}|YYYY-MM-DD))/
     );
-    const committeeLabel = committeeMatch ? committeeMatch[1].trim() : '実施日';
-    const committeeDate =
-      committeeMatch && committeeMatch[2].trim() !== 'YYYY-MM-DD'
-        ? committeeMatch[2].trim()
-        : '2024-07-01';
+
+    let committeeLabel = '実施日';
+    let committeeDate = '2024-07-01';
+
+    if (committeeMatch) {
+      const matchString = committeeMatch[1].trim();
+      if (matchString.includes('YYYY-MM-DD')) {
+        // "YYYY-MM-DD" が含まれている場合は、"委員会開催"をラベルとして設定
+        committeeLabel = matchString.replace(/\s*YYYY-MM-DD/, '');
+      } else {
+        // 実際の日付が含まれている場合、その日付を取得
+        const dateMatch = matchString.match(/\d{4}-\d{2}-\d{2}/);
+        if (dateMatch) {
+          committeeDate = dateMatch[0];
+          committeeLabel = matchString.replace(/\s*\d{4}-\d{2}-\d{2}/, '');
+        }
+      }
+    }
 
     // シーケンスダイアグラムのタイトルを抽出
     const titleMatch = sequenceText.match(/title:\s*(.+)/);
