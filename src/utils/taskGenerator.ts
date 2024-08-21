@@ -1,6 +1,9 @@
 export function generateTaskList(sequenceDiagram: string): string {
   const taskGroups: { [actor: string]: string[] } = {}; // アクターごとのタスクリストを保持
 
+  const arrowRegex =
+    /(->>|-->>|->|\-->|-\)|--\)|-\>|\--x|-\>|->\>\+|-->>-|--x|->|--)/; // 対応するすべての矢印を正規表現で定義
+
   const lines = sequenceDiagram.split('\n'); // シーケンス図の行を取得
 
   lines.forEach((line) => {
@@ -21,34 +24,36 @@ export function generateTaskList(sequenceDiagram: string): string {
       return; // 無視すべき行はスキップ
     }
 
-    let actor: string, target: string, action: string;
+    // 矢印による分割を行い、アクターとタスク内容を取得
+    const arrowMatch = trimmedLine.match(arrowRegex);
+    if (arrowMatch) {
+      const [beforeArrow, afterArrow] = trimmedLine.split(arrowMatch[0]);
+      const actor = beforeArrow.trim();
+      const [target, action] = afterArrow.split(':').map((part) => part.trim());
+      const arrow = arrowMatch[0];
 
-    if (trimmedLine.includes('-->>')) {
-      // 受信タスクの解析 (例: target -->> actor: action)
-      const [targetRaw, actorAction] = trimmedLine.split('-->>');
-      [actor, action] = actorAction.split(':');
-      target = targetRaw.trim();
-      actor = actor.trim();
-      action = action.trim();
-      const taskDescription = `- [ ] ${target}から${action}を受け取る`;
+      let taskDescription = '';
+
+      // 矢印の種類によってタスクの形式を決定
+      if (arrow.includes('>')) {
+        taskDescription = `- [ ] ${target}に${action}をする`;
+      } else if (arrow.includes('<') || arrow.includes('-')) {
+        taskDescription = `- [ ] ${target}から${action}を受け取る`;
+      }
 
       if (!taskGroups[actor]) {
         taskGroups[actor] = [];
       }
       taskGroups[actor].push(taskDescription);
-    } else if (trimmedLine.includes('->>')) {
-      // 送信タスクの解析 (例: actor ->> target: action)
-      const [actorRaw, targetAction] = trimmedLine.split('->>');
-      [target, action] = targetAction.split(':');
-      actor = actorRaw.trim();
-      target = target.trim();
-      action = action.trim();
-      const taskDescription = `- [ ] ${target}に${action}する`;
 
-      if (!taskGroups[actor]) {
-        taskGroups[actor] = [];
+      // 「受け取る」側のアクターに対してもタスクを追加
+      if (arrow.includes('<') || arrow.includes('-')) {
+        const receiveTaskDescription = `- [ ] ${actor}から${action}を受け取る`;
+        if (!taskGroups[target]) {
+          taskGroups[target] = [];
+        }
+        taskGroups[target].push(receiveTaskDescription);
       }
-      taskGroups[actor].push(taskDescription);
     }
   });
 
