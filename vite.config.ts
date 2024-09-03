@@ -1,5 +1,8 @@
 import { defineConfig } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
+import { resolve } from 'path';
+
+const inputPath = process.env.INPUT_PATH || './src/workflow-master.ts';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -14,14 +17,15 @@ export default defineConfig({
     })
   ],
   build: {
+    emptyOutDir: false,
     rollupOptions: {
-      input: 'src/kintone.ts',
+      input: resolve(__dirname, inputPath),
       output: {
         format: 'iife', // 即時実行関数
         dir: 'dist',
-        assetFileNames: '[name]-[hash][extname]',
-        chunkFileNames: '[name]-[hash].js',
-        entryFileNames: '[name]-[hash].js',
+        assetFileNames: '[name][extname]',
+        chunkFileNames: '[name].js',
+        entryFileNames: '[name].js',
       },
     }
   },

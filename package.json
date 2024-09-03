@@ -5,15 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build master": "cross-env INPUT_PATH=./src/workflow-master.ts vite build",
+    "build instance": "cross-env INPUT_PATH=./src/workflow-instance.ts vite build",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write ./src"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
+    "@types/node": "^22.5.2",
     "@typescript-eslint/eslint-plugin": "^8.1.0",
     "@typescript-eslint/parser": "^8.1.0",
+    "cross-env": "^7.0.3",
     "eslint": "^9.9.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
