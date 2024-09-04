@@ -27,14 +27,16 @@ import { generateGanttChart } from './utils/generateGanttChart';
     };
 
     try {
-      const workflowMasterAppRecords = await kintone.api(
+      const resp = await kintone.api(
         kintone.api.url('/k/v1/records.json', true),
         'GET',
         params
       );
 
+      const workflowMasterAppRecords = resp.records;
+
       // 同じ「業務フローID」のレコードが「業務フローマスター」アプリに存在しないときにエラーを表示
-      if (workflowMasterAppRecords.records.length === 0) {
+      if (workflowMasterAppRecords.length === 0) {
         window.alert(
           '「業務フローマスター」アプリに同じ「業務フローID」のレコードがありません。'
         );
@@ -43,7 +45,7 @@ import { generateGanttChart } from './utils/generateGanttChart';
 
       // シーケンス図の表示
       const sequenceText =
-        workflowMasterAppRecords.records[0].sequence_input_field.value;
+        workflowMasterAppRecords[0].sequence_input_field.value;
       const spaceElementForSequence =
         kintone.app.record.getSpaceElement('sequence-display');
       if (!!sequenceText) {
@@ -93,8 +95,7 @@ import { generateGanttChart } from './utils/generateGanttChart';
 
       // 補足事項の表示
       const additionalInformationText =
-        workflowMasterAppRecords.records[0].additional_information_input_field
-          .value;
+        workflowMasterAppRecords[0].additional_information_input_field.value;
       const spaceElementForAdditionalInformation =
         kintone.app.record.getSpaceElement('additional-information-display');
       spaceElementForAdditionalInformation.classList.add('markdown-body');
