@@ -14,29 +14,36 @@ import { generateGanttChart } from './utils/generateGanttChart';
     breaks: true,
   });
 
+  // 「業務フローマスター」アプリのID
+  const APP_ID = 2644;
+
   // レコード追加・編集画面表示後イベント
   kintone.events.on(['app.record.detail.show'], async (event) => {
     const record = event.record;
-    const APP_ID = 2644;
 
     const params = {
       app: APP_ID,
-      query: `workflow_id = ${record.workflow_id.value}`
+      query: `workflow_id = ${record.workflow_id.value}`,
     };
 
-    // return event;
-    return kintone.api(kintone.api.url('/k/v1/records', true), 'GET', params).then((resp) => {
-
-      const workflowMasterAppRecords = resp.records;
+    try {
+      const workflowMasterAppRecords = await kintone.api(
+        kintone.api.url('/k/v1/records.json', true),
+        'GET',
+        params
+      );
 
       // 同じ「業務フローID」のレコードが「業務フローマスター」アプリに存在しないときにエラーを表示
-      if (workflowMasterAppRecords.length === 0) {
-        window.alert('「業務フローマスター」アプリに同じ「業務フローID」のレコードがありません。');
+      if (workflowMasterAppRecords.records.length === 0) {
+        window.alert(
+          '「業務フローマスター」アプリに同じ「業務フローID」のレコードがありません。'
+        );
         return event;
       }
 
       // シーケンス図の表示
-      const sequenceText = workflowMasterAppRecords[0].sequence_input_field.value;
+      const sequenceText =
+        workflowMasterAppRecords.records[0].sequence_input_field.value;
       const spaceElementForSequence =
         kintone.app.record.getSpaceElement('sequence-display');
       if (!!sequenceText) {
@@ -86,7 +93,8 @@ import { generateGanttChart } from './utils/generateGanttChart';
 
       // 補足事項の表示
       const additionalInformationText =
-        workflowMasterAppRecords[0].additional_information_input_field.value;
+        workflowMasterAppRecords.records[0].additional_information_input_field
+          .value;
       const spaceElementForAdditionalInformation =
         kintone.app.record.getSpaceElement('additional-information-display');
       spaceElementForAdditionalInformation.classList.add('markdown-body');
@@ -110,11 +118,10 @@ import { generateGanttChart } from './utils/generateGanttChart';
       });
 
       return event;
-
-    }).catch((error) => {
+    } catch (error) {
       // エラー表示をする
       window.alert(`エラーが起こりました。エラーメッセージ：${error.message}`);
       return event;
-    });
+    }
   });
 })();
